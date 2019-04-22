@@ -38,6 +38,19 @@ set(MY_SOURCES
   ${SOURCES_GLOB}
   )
 
+# Versioning
+# ==========
+
+file(STRINGS "${MY_INCLUDE_DIR}/clcxx_eigen_config.hpp" clcxx_eigen_version_defines
+  REGEX "#define CLCXX_EIGEN_VERSION_(MAJOR|MINOR|PATCH)")
+foreach(ver ${clcxx_eigen_version_defines})
+  if(ver MATCHES "#define CLCXX_EIGEN_VERSION_(MAJOR|MINOR|PATCH) +([^ ]+)$")
+    set(CLCXX_EIGEN_VERSION_${CMAKE_MATCH_1} "${CMAKE_MATCH_2}" CACHE INTERNAL "")
+  endif()
+endforeach()
+set(${PROJECT_NAME}_VERSION
+  ${CLCXX_EIGEN_VERSION_MAJOR}.${CLCXX_EIGEN_VERSION_MINOR}.${CLCXX_EIGEN_VERSION_PATCH})
+message(STATUS "${PROJECT_NAME} version: v${${PROJECT_NAME}_VERSION}")
 
 # Output
 # ======
@@ -56,6 +69,9 @@ target_link_libraries(${PROJECT_NAME}
   ${CLCXX}
   "-Wl,--no-undefined" "-Wl,--no-allow-shlib-undefined"
 )
+
+set_property(TARGET ${PROJECT_NAME} PROPERTY VERSION ${${PROJECT_NAME}_VERSION})
+set_property(TARGET ${PROJECT_NAME} PROPERTY SOVERSION ${CLCXX_EIGEN_MAJOR})
 
 
 

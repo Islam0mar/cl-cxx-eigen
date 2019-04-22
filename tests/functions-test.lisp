@@ -1,19 +1,38 @@
 (defpackage cxx/test
   (:use :cl
         :prove
+        :CXX-EIGEN
         ))
 (in-package :cxx/test)
 
+;; (ql:quickload :CXX-EIGEN)
 
 (plan 1)
 
 ;; start here
-(ok (eigen:init))
+(ok (init))
 
-(eigen:m.print (eigen:create-mat2 3 3))
-(eigen:m.print (eigen:m.set-identity (eigen:create-mat2 3 3)))
+(defun test-m-loop ()
+  (let ((x (create-matrix2 3 3)))
+    (loop for i from 0 below 3
+       do (loop for j from 0 below 3
+             do (m.set-at-index x i j d)
+               (setf d (1+ d))))
+    x))
+(defun test-m-identity ()
+  (let ((x (create-matrix2 3 3)))
+    (m.set-identity x)
+    x))
+(defun test-m-fill-lst ()
+  (let ((x (create-matrix2 3 3)))
+    (m.set-from-list x '(1d0 2d0 3d0 4d0 5d0 6d0 7d0 8d0 9d0 10d0) 5 2)
+    x))
 
-(ok (eigen:close))
+(ok (m.print (test-m)))
+(ok (m.print (test-m-identity)))
+(ok (m.print (test-m-fill-lst)))
+
+(ok (finish))
 
 (finalize)
 

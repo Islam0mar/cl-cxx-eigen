@@ -51,7 +51,7 @@ CLCXX_PACKAGE EIGEN(clcxx::Package& pack) {
       .defmethod("m.upper-Cholesky", &EigenMat::mUCholesky)
       .defmethod("m.eigen-values", &EigenMat::eigenVals)
       .defmethod("m.solve", &EigenMat::solveLU)
-      .defmethod("m.solve-Cholesky", &EigenMat::solveLU)
+      .defmethod("m.solve-Cholesky", &EigenMat::solveCholesky)
       .defmethod("m.lower", &EigenMat::mU)
       .defmethod("m.upper", &EigenMat::mL);
 

@@ -69,8 +69,6 @@ CXX-EIGEN> (m.print x)
   0   0   1"
 CXX-EIGEN> (m.determinant x)
 1.0d0
-CXX-EIGEN> (m* x (m.inverse x))
-#<MAT {1005BA5413}>
 CXX-EIGEN> (m.print (m* x (m.inverse x)))
 "1 0 0
 0 1 0
@@ -79,8 +77,44 @@ CXX-EIGEN> (m.print (m.inverse x))
 "   1 -2.1 5.83
    0    1 -4.3
    0    0    1"
-
-
+CXX-EIGEN> (defvar A (create-matrix2 3 3))
+A
+CXX-EIGEN> (m.set-from-list A '(2d0 4d0 -2d0 4d0 9d0 -3d0 -2d0 -3d0 7d0) 3 3)
+; No value
+CXX-EIGEN> (defvar L (m.l A))
+L
+CXX-EIGEN> (defvar U (m.u A))
+U
+CXX-EIGEN> (defvar P (m.p A))
+P
+CXX-EIGEN> (m.print L)
+"        1         0         0
+     -0.5         1         0
+      0.5 -0.333333         1"
+CXX-EIGEN> (m.print U)
+"      4       9      -3
+      0     1.5     5.5
+      0       0 1.33333"
+CXX-EIGEN> (m.print P)
+"0 1 0
+0 0 1
+1 0 0"
+CXX-EIGEN> (m.print A)
+" 2  4 -2
+ 4  9 -3
+-2 -3  7"
+CXX-EIGEN> (m.print (m* (m.inverse p) (m* l u)))
+" 2  4 -2
+ 4  9 -3
+-2 -3  7"
+CXX-EIGEN> (defvar B (create-matrix))
+B
+CXX-EIGEN> (m.set-from-list B '(2d0 8d0 10d0) 3 1)
+; No value
+CXX-EIGEN> (m.print (m.solve A B))
+"-1
+ 2
+ 2"
 ```
 
 ### NOTE

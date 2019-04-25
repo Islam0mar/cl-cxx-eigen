@@ -24,7 +24,8 @@
                (if (not (= (length lst) (* rows cols))) (error "Wrong rows,cols"))
                (dotimes (i (length lst))
                  (setf (mem-aref array :double i) (nth i lst)))
-               (%m.set-from-array obj array rows cols)))) 
+               (%m.set-from-array obj array rows cols)))
+           t)
       (eval `(in-package ,curr-pack)))))
 
   

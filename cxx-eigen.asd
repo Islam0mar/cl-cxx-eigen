@@ -30,4 +30,4 @@
                                :fill-pointer t)))
           (setf (fill-pointer seq) (read-sequence seq stream))
           seq)))
-  :in-order-to ((test-op (test-op "eigen-cxx-test"))))
+  :in-order-to ((test-op (test-op "cxx-eigen-test"))))

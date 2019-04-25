@@ -9,7 +9,7 @@ find_library(CLCXX NAMES clcxx libclcxx.so PATHS "~/.local/lib" NO_DEFAULT_PATH)
 find_package(Eigen3 REQUIRED)
 
 # Options
-set(CMAKE_VERBOSE_MAKEFILE true)
+# set(CMAKE_VERBOSE_MAKEFILE true)
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
 set(EXECUTABLE_OUTPUT_PATH "${PROJECT_PATH}/bin")
@@ -74,4 +74,12 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY VERSION ${${PROJECT_NAME}_VERSION})
 set_property(TARGET ${PROJECT_NAME} PROPERTY SOVERSION ${CLCXX_EIGEN_MAJOR})
 
 
+# Genrate ctags
+# =============
+add_custom_target(CTAGS
+  COMMAND  bash -c "ctags -e -R ${CMAKE_CURRENT_SOURCE_DIR} --exclude={build,.git} -f ${CMAKE_CURRENT_SOURCE_DIR}/build/TAGS"
+  VERBATIM
+  COMMENT "Generating ctags")
+
+add_dependencies(${PROJECT_NAME} CTAGS)
 

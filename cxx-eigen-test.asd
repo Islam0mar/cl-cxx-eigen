@@ -3,16 +3,16 @@
   Copyright (c) 2018 Islam Omar (io1131@fayoum.edu.eg)
 |#
 
-(defpackage :eigen/test/system
+(defpackage :cxx-eigen-test/system
   (:use :cl :asdf))
 
-(in-package :eigen/test/system)
+(in-package :cxx-eigen-test/system)
 
-(defsystem :eigen-test
+(defsystem :cxx-eigen-test
   :defsystem-depends-on (:prove-asdf)
   :author "Islam Omar"
   :license "MIT"
-  :depends-on (:eigen
+  :depends-on (:cxx-eigen
                :prove)
   :components ((:module "tests"
                 :components

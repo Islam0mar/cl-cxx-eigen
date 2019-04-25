@@ -87,10 +87,30 @@ class EigenMatWrapper : public EigenT {
     Eigen::FullPivLU<EigenT> lu(*this);
     return static_cast<type>(lu.permutationQ());
   }
+  type mInv() {
+    Eigen::FullPivLU<EigenT> lu(*this);
+    return static_cast<type>(lu.inverse());
+  }
+  ElementT mDet() {
+    Eigen::FullPivLU<EigenT> lu(*this);
+    return lu.determinant();
+  }
   type mP() {
     Eigen::FullPivLU<EigenT> lu(*this);
     return static_cast<type>(lu.permutationP());
   }
+  type squareML() {
+    type l = static_cast<type>(this->Identity(this->rows(), this->cols()));
+    l.block(0, 0, this->rows(), this->cols())
+        .template triangularView<Eigen::StrictlyLower>() =
+        this->lu().matrixLU();
+    return l;
+  }
+  type squareMU() {
+    return static_cast<type>(
+        this->lu().matrixLU().template triangularView<Eigen::Upper>());
+  }
+  type squareMP() { return static_cast<type>(this->lu().permutationP()); }
   type mLCholesky() { return static_cast<type>(this->llt().matrixL()); }
   type mUCholesky() { return static_cast<type>(this->llt().matrixU()); }
   std::string eigenVals() {
@@ -106,6 +126,9 @@ class EigenMatWrapper : public EigenT {
   type solveLU(const type& b) {
     Eigen::FullPivLU<EigenT> lu(*this);
     return static_cast<type>(lu.solve(b));
+  }
+  type solveSquareLU(const type& b) {
+    return static_cast<type>(this->lu().solve(b));
   }
   void setFromArray(ElementT arr[], Eigen::Index i, Eigen::Index j) {
     *this = Eigen::Map<RowMatrix>(arr, i, j);

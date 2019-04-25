@@ -42,18 +42,24 @@ CLCXX_PACKAGE EIGEN(clcxx::Package& pack) {
                                   &EigenMat::add))
       .defmethod("m.multiply", &EigenMat::multiply)
       .defmethod("m.inverse", &EigenMat::inv)
+      .defmethod("m.full-inverse", &EigenMat::mInv)
       .defmethod("m.transpose", &EigenMat::trans)
       .defmethod("m.determinant", &EigenMat::det)
+      .defmethod("m.full-determinant", &EigenMat::mDet)
       .defmethod("m.rank", &EigenMat::rankLU)
-      .defmethod("m.q", &EigenMat::mQ)
-      .defmethod("m.p", &EigenMat::mP)
+      .defmethod("m.full-q", &EigenMat::mQ)
+      .defmethod("m.full-p", &EigenMat::mP)
+      .defmethod("m.p", &EigenMat::squareMP)
+      .defmethod("m.l", &EigenMat::squareML)
+      .defmethod("m.u", &EigenMat::squareMU)
       .defmethod("m.lower-Cholesky", &EigenMat::mLCholesky)
       .defmethod("m.upper-Cholesky", &EigenMat::mUCholesky)
       .defmethod("m.eigen-values", &EigenMat::eigenVals)
-      .defmethod("m.solve", &EigenMat::solveLU)
+      .defmethod("m.full-solve", &EigenMat::solveLU)
+      .defmethod("m.solve", &EigenMat::solveSquareLU)
       .defmethod("m.solve-Cholesky", &EigenMat::solveCholesky)
-      .defmethod("m.lower", &EigenMat::mU)
-      .defmethod("m.upper", &EigenMat::mL);
+      .defmethod("m.full-lower", &EigenMat::mU)
+      .defmethod("m.full-upper", &EigenMat::mL);
 
   pack.defun("m*", [](const EigenMat& x, const EigenMat& y) -> EigenMat {
     return static_cast<EigenMat>(x * y);

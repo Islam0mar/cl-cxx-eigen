@@ -1,11 +1,12 @@
 cmake_minimum_required(VERSION 2.8.12)
-project(clcxx-eigen)
+project(ClCxx-Eigen)
 
 set(PROJECT_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
 
 # Dependencies
 # ============
-find_library(CLCXX NAMES clcxx libclcxx.so PATHS "~/.local/lib" NO_DEFAULT_PATH)
+find_library(ClCxx 1.0.0 NAMES ClCxx libClCxx.so
+  PATHS "~/.local/lib" NO_DEFAULT_PATH)
 find_package(Eigen3 REQUIRED)
 
 # Options
@@ -62,24 +63,14 @@ target_include_directories(${PROJECT_NAME} PUBLIC
   ${EIGEN3_INCLUDE_DIR}
 )
 
-target_compile_options(${PROJECT_NAME} PUBLIC "$<$<COMPILE_LANGUAGE:CXX>:-std=c++14>" "-Wall" "-ggdb3")
+target_compile_options(${PROJECT_NAME} PUBLIC "$<$<COMPILE_LANGUAGE:CXX>:-std=c++17>" "-Wall" "-ggdb3")
 
 
 target_link_libraries(${PROJECT_NAME}
-  ${CLCXX}
+  ${ClCxx}
   "-Wl,--no-undefined" "-Wl,--no-allow-shlib-undefined"
 )
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY VERSION ${${PROJECT_NAME}_VERSION})
 set_property(TARGET ${PROJECT_NAME} PROPERTY SOVERSION ${CLCXX_EIGEN_MAJOR})
-
-
-# Genrate ctags
-# =============
-add_custom_target(CTAGS
-  COMMAND  bash -c "ctags -e -R ${CMAKE_CURRENT_SOURCE_DIR} --exclude={build,.git} -f ${CMAKE_CURRENT_SOURCE_DIR}/build/TAGS"
-  VERBATIM
-  COMMENT "Generating ctags")
-
-add_dependencies(${PROJECT_NAME} CTAGS)
 

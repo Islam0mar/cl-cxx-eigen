@@ -5,6 +5,8 @@
 #include <Eigen/Eigenvalues>
 #include <Eigen/Geometry>
 #include <cstring>
+#include <filesystem>
+#include <iostream>
 #include <sstream>
 #include <string>
 
@@ -38,7 +40,20 @@ class EigenMatWrapper : public EigenT {
   }
   void set(const type& obj) { this->EigenT::operator=(obj); }
   void set0() { this->setZero(); }
-  void setId() { this->setIdentity(); }
+  void setId() {
+    const auto kTmpDir = std::filesystem::temp_directory_path();
+    const auto kStdOutputFile = kTmpDir.string() + "/clcxx_stdout.txt";
+
+    std::freopen(kStdOutputFile.c_str(), "w", stdout);
+    auto a = *this;
+    std::cout << a << std::endl;
+    a.setIdentity();
+    std::cout << a << std::endl;
+    std::printf(
+        "stdout is redirected to a file\n");  // this is written to redir.txt
+    std::fclose(stdout);
+    this->setIdentity();
+  }
   void set1() { this->setOnes(); }
   void getCol(Eigen::Index i) { this->col(i); }
   void getRow(Eigen::Index i) { this->row(i); }

@@ -6,9 +6,17 @@
                             (user-homedir-pathname))
            cffi:*foreign-library-directories*
            :test #'equal)
+  (pushnew (merge-pathnames #p".local/lib/"
+                            (user-homedir-pathname))
+           cffi:*foreign-library-directories*
+           :test #'equal)
 
+  (cffi:define-foreign-library lib
+    (t (:default "libClCxx")))
+
+  (cffi:use-foreign-library lib)
   (cffi:define-foreign-library my-lib
-    (t (:default "libclcxx-eigen")))
+    (t (:default "libClCxx-Eigen")))
 
   (cffi:use-foreign-library my-lib)
   (cxx:init)
@@ -19,7 +27,7 @@
            (cxx::register-package "eigen" (foreign-symbol-pointer "EIGEN"))
            (export 'm.set-from-list)
            (defmethod m.set-from-list ((obj matrix) (lst list) (rows fixnum) (cols fixnum))
-             "Fill the matrix from a list"   
+             "Fill the matrix from a list"
              (cffi:with-foreign-object (array :double (* rows cols))
                (if (not (= (length lst) (* rows cols))) (error "Wrong rows,cols"))
                (dotimes (i (length lst))
@@ -28,9 +36,8 @@
            t)
       (eval `(in-package ,curr-pack)))))
 
-  
+
 
 (defun finish ()
   (cxx::remove-c-package "eigen")
   (cffi:close-foreign-library 'my-lib))
-

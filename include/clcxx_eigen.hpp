@@ -4,15 +4,17 @@
 #include <Eigen/Eigen>
 #include <Eigen/Eigenvalues>
 #include <Eigen/Geometry>
-#include <cstring>
+#include <Eigen/Sparse>
+#include <cstdio>
 #include <filesystem>
 #include <iostream>
 #include <sstream>
 #include <string>
 
-template <typename EigenT, typename ElementT>
+template <typename EigenT>
 class EigenMatWrapper : public EigenT {
-  using type = EigenMatWrapper<EigenT, ElementT>;
+  using ElementT = typename EigenT::Scalar;
+  using ThisType = EigenMatWrapper<EigenT>;
   using RowMatrix =
       Eigen::Matrix<ElementT, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 
@@ -26,126 +28,146 @@ class EigenMatWrapper : public EigenT {
   explicit EigenMatWrapper(const EigenT& obj) : EigenT(obj) {}
 
   // This method allows you to assign Eigen expressions to MyVectorType
-  type& operator=(const EigenT& other) {
+  ThisType& operator=(const EigenT& other) {
     this->EigenT::operator=(other);
     return *this;
   }
 
-  void set(Eigen::Index i, Eigen::Index j, ElementT value) {
+  void Set(Eigen::Index i, Eigen::Index j, ElementT value) {
     if ((this->rows() > i) && (this->cols() > j) && (i > -1) && (j > -1)) {
       this->operator()(i, j) = value;
     } else {
       throw std::runtime_error("Wrong index");
     }
   }
-  void set(const type& obj) { this->EigenT::operator=(obj); }
-  void set0() { this->setZero(); }
-  void setId() {
-    const auto kTmpDir = std::filesystem::temp_directory_path();
-    const auto kStdOutputFile = kTmpDir.string() + "/clcxx_stdout.txt";
-
-    std::freopen(kStdOutputFile.c_str(), "w", stdout);
-    auto a = *this;
-    std::cout << a << std::endl;
-    a.setIdentity();
-    std::cout << a << std::endl;
-    std::printf(
-        "stdout is redirected to a file\n");  // this is written to redir.txt
-    std::fclose(stdout);
-    this->setIdentity();
+  void Set(const ThisType& obj) { this->EigenT::operator=(obj); }
+  void Set0() { this->setZero(); }
+  void SetIdentity() { this->setIdentity(); }
+  void SetOnes() { this->setOnes(); }
+  ThisType GetCol(Eigen::Index i) {
+    return static_cast<ThisType>(this->col(i));
   }
-  void set1() { this->setOnes(); }
-  void getCol(Eigen::Index i) { this->col(i); }
-  void getRow(Eigen::Index i) { this->row(i); }
-  type getBlock(Eigen::Index i, Eigen::Index j, Eigen::Index k,
-                Eigen::Index l) {
-    return static_cast<type>(this->block(i, j, k, l));
+  ThisType GetRow(Eigen::Index i) {
+    return static_cast<ThisType>(this->row(i));
   }
-  ElementT get(Eigen::Index i, Eigen::Index j) {
+  ThisType GetBlock(Eigen::Index i, Eigen::Index j, Eigen::Index k,
+                    Eigen::Index l) {
+    return static_cast<ThisType>(this->block(i, j, k, l));
+  }
+  ElementT Get(Eigen::Index i, Eigen::Index j) {
     if ((this->rows() > i) && (this->cols() > j) && (i > -1) && (j > -1)) {
       return this->operator()(i, j);
     } else {
       throw std::runtime_error("Wrong index");
     }
   }
-  std::string print() {
+
+  std::string Print() {
     std::stringstream s;
+    s << std::endl;
     s << *this;
     return s.str();
   }
-  void scale(const ElementT& value) { *this *= value; }
-  void add(const ElementT& value) {
-    this->unaryExpr([value](double x) { return x + value; });
+
+  void PrintToFile(std::string path) {
+    if (path == "") {
+      const auto kTmpDir = std::filesystem::temp_directory_path();
+      const auto kStdOutputFile = kTmpDir.string() + "/clcxx_stdout.txt";
+      path = kStdOutputFile;
+    }
+    if (std::freopen(path.c_str(), "w", stdout) != nullptr) {
+      auto a = *this;
+      std::cout << a << std::endl;
+      std::fclose(stdout);
+    }
   }
-  void add(const type& obj) { *this += (type)obj; }
-  void multiply(const type& obj) { *this *= obj; }
-  type inv() { return static_cast<type>(this->inverse()); }
-  type trans() { return static_cast<type>(this->transpose()); }
-  ElementT det() { return this->determinant(); }
-  Eigen::Index rankLU() {
+
+  void Scale(const ElementT value) { *this *= value; }
+  void Add(const ElementT value) {
+    *this = this->unaryExpr([value](double x) { return x + value; });
+  }
+  void Add(const ThisType& obj) { *this += (ThisType)obj; }
+  void Multiply(const ThisType& obj) { *this *= obj; }
+  ThisType Inv() { return static_cast<ThisType>(this->inverse()); }
+  ThisType Trans() { return static_cast<ThisType>(this->transpose()); }
+  ElementT Det() { return this->determinant(); }
+  void SetFromArray(ElementT arr[], Eigen::Index i, Eigen::Index j) {
+    *this = Eigen::Map<RowMatrix>(arr, i, j);
+  }
+
+  ElementT* GetAsArray() { return this->data(); }
+
+  Eigen::Index FullPivRank() {
     Eigen::FullPivLU<EigenT> lu(*this);
     return lu.rank();
   }
-  type mL() {
+  ThisType FullPivL() {
     Eigen::FullPivLU<EigenT> lu(*this);
-    type l = static_cast<type>(this->Identity(this->rows(), this->cols()));
+    ThisType l =
+        static_cast<ThisType>(this->Identity(this->rows(), this->cols()));
     l.block(0, 0, this->rows(), this->cols())
         .template triangularView<Eigen::StrictlyLower>() = lu.matrixLU();
     return l;
   }
-  type mU() {
+  ThisType FullPivU() {
     Eigen::FullPivLU<EigenT> lu(*this);
-    return static_cast<type>(
+    return static_cast<ThisType>(
         lu.matrixLU().template triangularView<Eigen::Upper>());
   }
-  type mQ() {
+  ThisType FullPivQ() {
     Eigen::FullPivLU<EigenT> lu(*this);
-    return static_cast<type>(lu.permutationQ());
+    return static_cast<ThisType>(lu.permutationQ());
   }
-  type mInv() {
+  ThisType FullPivInv() {
     Eigen::FullPivLU<EigenT> lu(*this);
-    return static_cast<type>(lu.inverse());
+    return static_cast<ThisType>(lu.inverse());
   }
-  ElementT mDet() {
+  ElementT FullPivDet() {
     Eigen::FullPivLU<EigenT> lu(*this);
     return lu.determinant();
   }
-  type mP() {
+  ThisType FullPivP() {
     Eigen::FullPivLU<EigenT> lu(*this);
-    return static_cast<type>(lu.permutationP());
+    return static_cast<ThisType>(lu.permutationP());
   }
-  type squareML() {
-    type l = static_cast<type>(this->Identity(this->rows(), this->cols()));
+  ThisType CholeskyL() { return static_cast<ThisType>(this->llt().matrixL()); }
+  ThisType CholeskyU() { return static_cast<ThisType>(this->llt().matrixU()); }
+  // type EigenVals() {
+  //   Eigen::VectorXcd eivals = this->eigenvalues();
+  //   return static_cast<type>(eivals);
+  // }
+  // type EigenVectors() {
+  //   Eigen::VectorXcd eivals = this->eigenvectors();
+  //   return static_cast<type>(eivals);
+  // }
+  ThisType SquareML() {
+    ThisType l =
+        static_cast<ThisType>(this->Identity(this->rows(), this->cols()));
     l.block(0, 0, this->rows(), this->cols())
         .template triangularView<Eigen::StrictlyLower>() =
         this->lu().matrixLU();
     return l;
   }
-  type squareMU() {
-    return static_cast<type>(
+  ThisType SquareMU() {
+    return static_cast<ThisType>(
         this->lu().matrixLU().template triangularView<Eigen::Upper>());
   }
-  type squareMP() { return static_cast<type>(this->lu().permutationP()); }
-  type mLCholesky() { return static_cast<type>(this->llt().matrixL()); }
-  type mUCholesky() { return static_cast<type>(this->llt().matrixU()); }
-  std::string eigenVals() {
-    Eigen::VectorXcd eivals = this->eigenvalues();
-    std::stringstream s;
-    s << eivals;
-    return s.str();
+  ThisType SquareMP() {
+    return static_cast<ThisType>(this->lu().permutationP());
   }
   // Ax = b ,returns x
-  type solveCholesky(const type& b) {
-    return static_cast<type>(this->llt().solve(b));
+  ThisType SolveCholesky(const ThisType& b) {
+    return static_cast<ThisType>(this->llt().solve(b));
   }
-  type solveLU(const type& b) {
+  ThisType SolveFullPivLU(const ThisType& b) {
     Eigen::FullPivLU<EigenT> lu(*this);
-    return static_cast<type>(lu.solve(b));
+    return static_cast<ThisType>(lu.solve(b));
   }
-  type solveSquareLU(const type& b) {
-    return static_cast<type>(this->lu().solve(b));
+  ThisType SolveSquareLU(const ThisType& b) {
+    return static_cast<ThisType>(this->lu().solve(b));
   }
-  void setFromArray(ElementT arr[], Eigen::Index i, Eigen::Index j) {
-    *this = Eigen::Map<RowMatrix>(arr, i, j);
+  ThisType SolveSVD(const ThisType& b) {
+    Eigen::BDCSVD<EigenT> SVD(*this, Eigen::ComputeThinU | Eigen::ComputeThinV);
+    return static_cast<ThisType>(SVD.solve(b));
   }
 };
